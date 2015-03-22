@@ -19,14 +19,13 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
-public class MainActivity extends Activity
+public class MainActivity extends Activity implements twitterListFragment.OnFragmentInteractionListener
 {
    // name of SharedPreferences XML file that stores the saved searches 
    private static final String SEARCHES = "searches";
@@ -58,7 +57,9 @@ public class MainActivity extends Activity
       // create ArrayAdapter and use it to bind tags to the ListView
       adapter = new ArrayAdapter<String>(this, R.layout.list_item, tags);
       // MOVE to ListFragment _ setListAdapter(adapter);
-      
+      getFragmentManager().beginTransaction()
+              .add(R.id.fragment_holder,new twitterListFragment(adapter))
+              .commit();
       // register listener to save a new or edited search 
       ImageButton saveButton = 
          (ImageButton) findViewById(R.id.saveButton);
@@ -88,7 +89,11 @@ public class MainActivity extends Activity
             
             ((InputMethodManager) getSystemService(
                Context.INPUT_METHOD_SERVICE)).hideSoftInputFromWindow(
-               tagEditText.getWindowToken(), 0);  
+               tagEditText.getWindowToken(), 0);
+
+             getFragmentManager().beginTransaction()
+                     .replace(R.id.fragment_holder,new twitterListFragment(adapter))
+                     .commit();
          } 
          else // display message asking user to provide a query and a tag
          {
@@ -274,6 +279,17 @@ public class MainActivity extends Activity
 
    // ADDED to set up the ListFragment
    public ArrayAdapter<String> getAdapter(){return adapter;}
+
+    //an interface in OnFragmentInteractionListener
+    public void passPositionToWebViewFragment(String tag){
+
+        String urlString = getString(R.string.searchURL) +
+                Uri.encode(savedSearches.getString(tag, ""), "UTF-8");
+        getFragmentManager().beginTransaction()
+                .replace(R.id.fragment_holder,new WebViewFragment().newInstance(tag,urlString))
+                .addToBackStack(null)
+                .commit();
+    }
 
 } // end class MainActivity
 
